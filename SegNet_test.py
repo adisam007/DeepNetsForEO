@@ -1,3 +1,7 @@
+'''Flask Server to run Satellite Image Segmentation '''
+__author__ = "Adithya Sampath"
+__date__  = "July 2019"
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,6 +11,7 @@ import torch.optim.lr_scheduler
 import torch.nn.init
 import os
 from torch.autograd import Variable
+import cv2
 #image utils
 from skimage.transform import rescale
 from skimage.io import imread, imsave
@@ -40,9 +45,27 @@ net.load_state_dict(
 def predict(img_path, img_name, net):
     preds = test(net, img_path, all=True, stride=32)
     img = convert_to_color(preds)
-    pred_img = './images/inference_{}'.format(img_name)
+
+    img_name_disp = 'inference_{}'.format(img_name)
+    pred_img = os.path.join(".", "images", img_name_disp)
     io.imsave(pred_img, img)
-    return pred_img
+    return pred_img, img_name_disp
+
+
+def find_building(image_path, image_name):
+    img = np.asarray(cv2.imread(image_path))
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    image = img.copy()
+    image[np.where((image == [0, 0, 255]).all(axis=2))] = [255, 0, 255]
+    image[np.where((image == [255, 255, 255]).all(axis=2))] = [0, 0, 0]
+    image[np.where((image == [0, 255, 255]).all(axis=2))] = [0, 0, 0]
+    image[np.where((image == [0, 255, 0]).all(axis=2))] = [0, 0, 0]
+    image[np.where((image == [255, 255, 0]).all(axis=2))] = [0, 0, 0]
+    image[np.where((image == [255, 0, 0]).all(axis=2))] = [0, 0, 0]
+    img_name_disp = "building_" + str(image_name).split(".")[0] + ".png"
+    img_path_disp = os.path.join(".", "images", img_name_disp)
+    imsave(img_path_disp, image)
+    return img_path_disp
 
 
 #flask functions
@@ -79,12 +102,15 @@ def upload():
         img_path_disp = os.path.join(".", "images", img_name_disp)
         imsave(img_path_disp, img_file_disp)
         print(img_name_disp)
-
         start = time.time()
-        pred_img = predict(img_path_pred, img_name_disp, net)
+        pred_img, pred_name = predict(img_path_pred, img_name_disp, net)
+        building_img = find_building(pred_img, pred_name)
         print("Prediction time: ", time.time() - start)
         return render_template(
-            "complete.html", image_name=img_path_disp, out_name=pred_img)
+            "complete.html",
+            image_name=img_path_disp,
+            out_name=pred_img,
+            building_name=building_img)
 
 
 if __name__ == "__main__":

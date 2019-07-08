@@ -1,3 +1,6 @@
+'''SegNet NN functions for Satellite Image Segmentation '''
+__author__ = "Adithya Sampath"
+__date__  = "July 2019"
 # imports and stuff
 import numpy as np
 from skimage import io
