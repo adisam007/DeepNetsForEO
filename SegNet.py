@@ -248,6 +248,3 @@ def test(net, test_ids, all=False, stride=WINDOW_SIZE[0], batch_size=BATCH_SIZE,
 
     pred = np.argmax(pred, axis=-1)
     return pred
-
-
-

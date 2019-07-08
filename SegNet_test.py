@@ -72,7 +72,7 @@ def upload():
         print(image_name_pred)
 
         #for browser display
-        img_file_disp = 1 / 255 * np.asarray(
+        img_file_disp = np.asarray(
             rescale(io.imread(img_path_pred), 1.0 / 4.0, anti_aliasing=False),
             dtype='float32')
         img_name_disp = str(img_file_pred.filename).split(".")[0] + ".png"
